@@ -1,0 +1,38 @@
+service: big-mouth
+
+plugins: 
+  - serverless-pseudo-parameters
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: ap-southeast-1
+  stage: dev
+  profile: admin
+  iamRoleStatements:
+    - Effect: Allow
+      Action: dynamodb:scan
+      Resource: arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/restaurants
+    - Effect: Allow
+      Action: execute-api:Invoke
+      Resource: arn:aws:execute-api:#{AWS::Region}:#{AWS::AccountId}:*/*/GET/restaurants
+
+functions: 
+  home-page:  
+    handler: functions/get-index.handler
+    events: 
+      - http: 
+          path: /
+          method: get
+    environment: 
+      restaurants_api: https://0b6tyb1822.execute-api.ap-southeast-1.amazonaws.com/dev/restaurants
+      
+  get-restaurants:
+    handler: functions/get-restaurants.handler
+    events:
+      - http: 
+          path: /restaurants
+          method: get
+          authorizer: aws_iam
+    environment: 
+      restaurant_table: restaurants
