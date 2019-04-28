@@ -16,6 +16,9 @@ provider:
     - Effect: Allow
       Action: execute-api:Invoke
       Resource: arn:aws:execute-api:#{AWS::Region}:#{AWS::AccountId}:*/*/GET/restaurants
+    - Effect: Allow
+      Action: ec2:*
+      Resource: arn:aws:ec2:#{AWS::Region}:#{AWS::AccountId}:*
 
 functions: 
   home-page:  
@@ -36,3 +39,12 @@ functions:
           authorizer: aws_iam
     environment: 
       restaurant_table: restaurants
+
+  search-restaurants:
+    handler: functions/search-restaurants.handler
+    events:
+      - http:
+          path: /search
+          method: get
+    environment: 
+      restaurants_api: https://0b6tyb1822.execute-api.ap-southeast-1.amazonaws.com/dev/restaurants

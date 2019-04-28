@@ -18,6 +18,7 @@
     },
     "devDependencies": {
         "aws-sdk": "^2.427.0",
-        "serverless-pseudo-parameters": "^2.4.0"
+        "serverless-pseudo-parameters": "^2.4.0",
+        "sls": "^0.1.0"
     }
 }

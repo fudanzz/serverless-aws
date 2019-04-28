@@ -1,28 +1,32 @@
 'use strict';
 
 const co = require("co");
-const AWS = require("aws-sdk");
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const aws4 = require('aws4');
+const URL = require('url');
 
-const defaultResults = process.env.defaultResults || 8;
-const tableName = process.env.restaurant_table;
+const http = require('superagent-promise')(require('superagent'),Promise);
+const restaurantApiUrl = process.env.restaurants_api;
 
-function* findRestaurantsByTheme(theme, count){
-    console.log(tableName);
-    let req = {
-        TableName: tableName,
-        Limit: count,
-        FilterExpression: "contains(themes, :theme)",
-        ExpressionAttributeValues: { ":theme": theme }
+function* getRestaurants(){
+    let url = URL.parse(restaurantApiUrl);
+    let opts = {
+      host: url.hostname,
+      path: url.pathname
     };
-
-    let resp = yield dynamodb.scan(req).promise();
-    return resp.Items;
-}
+  
+    aws4.sign(opts);
+  
+    return (yield http  
+    .get(restaurantApiUrl)
+    .set('Host',opts.headers['Host'])
+    .set('X-Amz-Date',opts.headers['X-Amz-Date'])
+    .set('Authorization',opts.headers['Authorization'])
+    .set('X-Amz-Security-Token',opts.headers['X-Amz-Security-Token'])
+    ).body;
+  }
 
 module.exports.handler = co.wrap(function* (event, context, cb){
-    let req = JSON.parse(event.body);
-    let restaurants = yield findRestaurantsByTheme(req.theme,defaultResults);
+    let restaurants = yield getRestaurants();
     let response = {
       statusCode: 200,
       body: JSON.stringify(restaurants)
